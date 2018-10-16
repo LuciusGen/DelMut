@@ -2,7 +2,8 @@
 
 This repository containes the code and data which were used for the analysis of deleterious mutations classification. Comparison between performing
 classification with and without Transfer Learning is provided in the notebook `main.ipynb`. Inintial data tables are placed in `data/`. The directory
-`classifiers/` containes the directories `all` with the result of all training repetitions and `best` which keeps outperformed classifiers.
+`classifiers/` containes 2 directories: `all` with the results of all training repetitions and tables with accuracies; `best` which keeps outperformed
+classifiers.
 
 ## Description
 
@@ -42,7 +43,6 @@ To run content you need Python 3.6.5 or later. A list of required Python package
 
 ```
 git clone https://github.com/kovmax/DelMut.git
-
 ```
 
 ## References
