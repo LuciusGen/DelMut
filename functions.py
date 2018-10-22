@@ -130,6 +130,42 @@ def result_table(subs, X, stdX, y, pph2_prob, pph2_pred, clfs, X_test=None):
     return tab
 
 
+def arab_plot_accs(X_train, X_test, y_train, y_test, clfs):
+    '''
+    This function computes accuracies for the train and test data
+    from A. thaliana dataset and creates the corresponding bar chart
+    
+    :param X_train: A. thaliana train data 
+    :param X_test: A. thaliana test data
+    :param y_train: labes of A. thaliana train data 
+    :param y_test: labes of A. thaliana test data 
+    :return: a table with the accuracies
+    '''
+    
+    acc_tr = [accuracy_score(y_train, c.predict(X_train)) for c in clfs]
+    acc_te = [accuracy_score(y_test, c.predict(X_test)) for c in clfs]
+
+    ind = np.arange(len(acc_tr)) 
+    width = 0.15
+    y_val = np.arange(0, 1.01, 0.05)
+    
+    plt.figure(figsize=(8, 8))
+    plt.bar(ind, acc_tr, width, label='Train data')
+    plt.bar(ind + width, acc_te, width, label='Test data')
+    plt.ylabel('Accuracy')
+    plt.xticks(ind + width / 2, ('lSVM', 'gSVM', 'RF'))
+    plt.yticks(y_val)
+    plt.grid(True, axis='y', linestyle='--')
+    plt.legend(loc='best')
+    plt.show()
+    
+    indx = ['lSVM', 'gSVM', 'RF']
+    cols = ['Train data', 'Test data']
+    tab = pd.DataFrame(np.vstack([acc_tr, acc_te]).T, index=indx, columns=cols).round(3)
+    
+    return tab
+    
+
 def mets_mats_arab(tab):
     '''
     This function makes confusion matrixes and calcutates metrics in interest related with A. thaliana
@@ -141,21 +177,24 @@ def mets_mats_arab(tab):
     
     # Names of columns and rows
     label_clfs = ['PPh2', 'lSVM', 'gSVM', 'RF']
-    label_mets  =['Accuracy', 'FPR', 'FNR', 'Sensetivity', 'Specificity']
+    label_mets  =['Accuracy', 'FPR', 'FNR', 'Sensetivity', 'Specificity', 'AUC']
     label_mat_ind, label_mat_col = ['Actual_Neu', 'Actual_Del'], ['Predicted_Neu', 'Predicted_Del']
     
+    probs = tab.iloc[:, -2 * len(label_clfs):-len(label_clfs)].dropna()
     preds = tab.iloc[:, -len(label_clfs):].dropna()
     true = tab.is_deleterious.iloc[preds.index]
     
     # Make confusion matrixes and calcutate metrics
     mets, mats = [], []
-    for clf in preds:
-        tn, fp, fn, tp = confusion_matrix(true, preds[clf]).ravel()
+    for c_probs, c_preds in zip(probs, preds):
+        tn, fp, fn, tp = confusion_matrix(true, preds[c_preds]).ravel()
+        acc = accuracy_score(true, preds[c_preds])
         sen = tp / (fn + tp)
         fnr = fn / (fn + tp)
         spe = tn / (fp + tn)
-        fpr = fp / (fp + tn)        
-        mets.append([accuracy_score(true, preds[clf]), fpr, fnr, sen, spe])
+        fpr = fp / (fp + tn)
+        auc = roc_auc_score(true, probs[c_probs])
+        mets.append([acc, fpr, fnr, sen, spe, auc])
         mats.append(np.array([[tn, fp], [fn, tp]]))
     
     # Package results in tables
@@ -176,18 +215,21 @@ def mets_others(tab):
     
     # Names of columns and rows
     label_clfs = ['PPh2', 'lSVM', 'gSVM', 'RF', 'lSVM + TL', 'gSVM + TL', 'RF + TL']
-    label_mets  =['Accuracy', 'FPR', 'FNR']
+    label_mets  =['Accuracy', 'FPR', 'FNR', 'AUC']
     
     true = tab.is_deleterious
+    probs = tab.iloc[:, -2 * len(label_clfs):-len(label_clfs)]
     preds = tab.iloc[:, -len(label_clfs):]
     
     # Calcutate metrics
     mets = []
-    for clf in preds:
-        tn, fp, fn, tp = confusion_matrix(true, preds[clf]).ravel()
+    for c_probs, c_preds in zip(probs, preds):
+        tn, fp, fn, tp = confusion_matrix(true, preds[c_preds]).ravel()
+        acc = accuracy_score(true, preds[c_preds])
         fpr = fp / (fp + tn)
         fnr = fn / (fn + tp)
-        mets.append([accuracy_score(true, preds[clf]), fpr, fnr])
+        auc = roc_auc_score(true, probs[c_probs])
+        mets.append([acc, fpr, fnr, auc])
     
     # Package results in table
     mets = pd.DataFrame(mets, index=label_clfs, columns=label_mets).round(3)
@@ -227,3 +269,26 @@ def roc_curves(tab, is_arab):
     plt.ylabel('True Positive Rate')
     plt.legend(loc='best')
     plt.show()
+
+    
+def cicer_table(subs, X, stdX, pph2_pred, best_clf):
+    '''
+    This function computes a resulting table for C. arietinum, which consist of an initial table,
+    scaled features, predictions from PolyPhen-2 and the best classifier
+    
+    :param subs: a table which includes protein names, substitutions and their positions
+    :param X: a table with features
+    :param stdX: a table with scaled features
+    :param pph2_pred: predictions obtained by PolyPhen-2
+    :param best_clf: the best classifier
+    :return: a resulting table
+    '''
+    
+    tab = pd.concat([subs, X, stdX, pph2_pred], axis=1)
+    cols = list(subs) + list(X) + ['Scaled_' + l for l in list(X)] + ['pred_pph2']
+    tab.columns = cols
+    
+    tab['pred_best_clf'] = best_clf.predict(stdX)
+            
+    return tab
+    
