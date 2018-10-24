@@ -149,14 +149,16 @@ def arab_plot_accs(X_train, X_test, y_train, y_test, clfs):
     width = 0.15
     y_val = np.arange(0, 1.01, 0.05)
     
-    plt.figure(figsize=(8, 8))
-    plt.bar(ind, acc_tr, width, label='Train data')
-    plt.bar(ind + width, acc_te, width, label='Test data')
-    plt.ylabel('Accuracy')
-    plt.xticks(ind + width / 2, ('lSVM', 'gSVM', 'RF'))
-    plt.yticks(y_val)
-    plt.grid(True, axis='y', linestyle='--')
-    plt.legend(loc='best')
+    fsize = 13
+    
+    plt.figure(figsize=(15, 8))
+    plt.barh(ind, acc_tr, width, label='Train data')
+    plt.barh(ind + width, acc_te, width, label='Test data')
+    plt.xlabel('Accuracy', fontsize=fsize)
+    plt.yticks(ind + width / 2, ('lSVM', 'gSVM', 'RF'), fontsize=fsize)
+    plt.xticks(y_val, fontsize=fsize)
+    plt.grid(True, axis='x', linestyle='--')
+    plt.legend(loc='best', framealpha=1, fontsize=fsize)
     plt.show()
     
     indx = ['lSVM', 'gSVM', 'RF']
@@ -259,15 +261,19 @@ def roc_curves(tab, is_arab):
         fpr, tpr, _ = roc_curve(true, preds[clf])        
         auc = roc_auc_score(true, preds[clf])
         curves.append([fpr, tpr, auc])
+        
+    fsize = 13
     
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(14, 14))
     for cur, clf in zip(curves, label_clfs):
         lab = clf + ': AUC = {}'.format(round(cur[2], 3))
         plt.plot(cur[0], cur[1], label=lab)
     plt.plot([0, 1], [0, 1], '--', color='grey')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.legend(loc='best')
+    plt.xlabel('False Positive Rate', fontsize=fsize)
+    plt.ylabel('True Positive Rate', fontsize=fsize)
+    plt.xticks(fontsize=fsize)
+    plt.yticks(fontsize=fsize)
+    plt.legend(loc='best', framealpha=1, fontsize=fsize)
     plt.show()
 
     
