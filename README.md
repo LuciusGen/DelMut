@@ -52,6 +52,7 @@ git clone https://github.com/kovmax/DelMut.git
 ## Authors
 
 **Maxim Kovalev**  contributed in `delmut_main.ipynb` and `functions.py`.
+
 **Anna Igolkina** contributed in `delmut_plot_figures.ipynb` and `delmut_snp_freq_analysis.ipynb`, [e-mail](mailto:igolkinaanna11@gmail.com).
 
 
